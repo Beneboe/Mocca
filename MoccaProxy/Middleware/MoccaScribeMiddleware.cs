@@ -5,11 +5,11 @@ using MoccaProxy.Interfaces;
 
 namespace MoccaProxy.Middleware;
 
-public sealed class ScribeMiddleware
+public sealed class MoccaScribeMiddleware
 {
     private readonly RequestDelegate _next;
 
-    public ScribeMiddleware(RequestDelegate next)
+    public MoccaScribeMiddleware(RequestDelegate next)
     {
         _next = next;
     }

@@ -5,8 +5,8 @@ namespace MoccaProxy;
 
 public static class MiddlewareExtensions
 {
-    public static IApplicationBuilder UseForwarding(this IApplicationBuilder builder) => builder.UseMiddleware<ForwardingMiddleware>();
+    public static IApplicationBuilder UseMoccaProxy(this IApplicationBuilder builder) => builder.UseMiddleware<MoccaProxyMiddleware>();
 
-    public static IApplicationBuilder UseScribe(this IApplicationBuilder builder) =>
-        builder.UseMiddleware<ScribeMiddleware>();
+    public static IApplicationBuilder UseMoccaScribe(this IApplicationBuilder builder) =>
+        builder.UseMiddleware<MoccaScribeMiddleware>();
 }

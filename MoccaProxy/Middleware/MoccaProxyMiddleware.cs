@@ -4,9 +4,9 @@ using Microsoft.AspNetCore.Http;
 
 namespace MoccaProxy;
 
-public sealed class ForwardingMiddleware
+public sealed class MoccaProxyMiddleware
 {
-    public ForwardingMiddleware(RequestDelegate next)
+    public MoccaProxyMiddleware(RequestDelegate next)
     {
     }
 

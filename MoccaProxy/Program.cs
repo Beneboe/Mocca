@@ -42,14 +42,13 @@ public class Program
             app.UseSwaggerUI();
         }
 
-
         // app.UseHttpsRedirection();
         //
         // app.UseAuthorization();
 
-        app.UseScribe();
+        app.UseMoccaScribe();
 
-        app.UseForwarding();
+        app.UseMoccaProxy();
 
         app.Run();
     }
