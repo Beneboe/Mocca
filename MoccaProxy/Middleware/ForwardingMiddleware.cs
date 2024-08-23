@@ -1,26 +1,18 @@
-using System;
-using System.Collections.Generic;
-using System.Net;
 using System.Net.Http;
-using System.Net.Http.Headers;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.Primitives;
 
 namespace MoccaProxy;
 
-public class ForwardingMiddleware
+public sealed class ForwardingMiddleware
 {
-    private readonly IHttpClientFactory _httpClientFactory;
-
-    public ForwardingMiddleware(RequestDelegate next, IHttpClientFactory httpClientFactory)
+    public ForwardingMiddleware(RequestDelegate next)
     {
-        _httpClientFactory = httpClientFactory;
     }
 
-    public async Task InvokeAsync(HttpContext context)
+    public async Task InvokeAsync(HttpContext context, IHttpClientFactory httpClientFactory)
     {
-        var client = _httpClientFactory.CreateClient("ProxyClient");
+        var client = httpClientFactory.CreateClient("ProxyClient");
         var requestMessage = CreateRequest(context.Request);
         var responseMessage = await client.SendAsync(requestMessage, context.RequestAborted);
 

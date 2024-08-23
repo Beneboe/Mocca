@@ -1,10 +1,10 @@
 using System;
-using System.Linq;
 using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
+using MoccaProxy.Interfaces;
+using MoccaProxy.Services;
 
 namespace MoccaProxy;
 
@@ -15,8 +15,8 @@ public class Program
         var builder = WebApplication.CreateBuilder(args);
 
         // Configure options
-        builder.Services.Configure<ProxyOptions>(
-            builder.Configuration.GetSection("ProxyOptions"));
+        builder.Services.Configure<MoccaOptions>(
+            builder.Configuration.GetSection("Mocca"));
         
         // Add services to the container.
         builder.Services.AddAuthorization();
@@ -27,9 +27,11 @@ public class Program
 
         builder.Services.AddHttpClient("ProxyClient", (sp, client) =>
         {
-            var options = sp.GetRequiredService<IOptions<ProxyOptions>>().Value;
+            var options = sp.GetRequiredService<IOptions<MoccaOptions>>().Value;
             client.BaseAddress = new Uri(options.ForwardTo);
         });
+
+        builder.Services.AddScoped<IMoccaRepository, MoccaJsonRepository>();
 
         var app = builder.Build();
 
@@ -41,9 +43,11 @@ public class Program
         }
 
 
-        app.UseHttpsRedirection();
+        // app.UseHttpsRedirection();
+        //
+        // app.UseAuthorization();
 
-        app.UseAuthorization();
+        app.UseScribe();
 
         app.UseForwarding();
 
