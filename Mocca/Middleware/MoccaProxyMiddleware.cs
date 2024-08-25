@@ -1,8 +1,6 @@
-using System.Net.Http;
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 
-namespace MoccaProxy;
+namespace Mocca.Middleware;
 
 public sealed class MoccaProxyMiddleware
 {

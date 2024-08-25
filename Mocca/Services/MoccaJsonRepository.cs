@@ -1,13 +1,9 @@
-using System;
-using System.IO;
 using System.Text.Json;
-using System.Threading;
-using System.Threading.Tasks;
 using Microsoft.Extensions.Options;
-using MoccaProxy.Data;
-using MoccaProxy.Interfaces;
+using Mocca.Data;
+using Mocca.Interfaces;
 
-namespace MoccaProxy.Services;
+namespace Mocca.Services;
 
 public sealed class MoccaJsonRepository : IMoccaRepository
 {
@@ -22,7 +18,7 @@ public sealed class MoccaJsonRepository : IMoccaRepository
 
     public MoccaJsonRepository(IOptions<MoccaOptions> options)
     {
-        _destination = options.Value.Destination;
+        _destination = options.Value.ResponseFile;
         _jsonOptions = new JsonSerializerOptions(JsonSerializerDefaults.Web);
         
         if (string.IsNullOrWhiteSpace(_destination))

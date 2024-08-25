@@ -1,7 +1,4 @@
-using System;
-using System.Collections.Generic;
-
-namespace MoccaProxy.Data;
+namespace Mocca.Data;
 
 public sealed class MoccaResponse
 {

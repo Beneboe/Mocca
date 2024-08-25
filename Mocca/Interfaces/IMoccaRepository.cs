@@ -1,7 +1,6 @@
-using System.Threading.Tasks;
-using MoccaProxy.Data;
+using Mocca.Data;
 
-namespace MoccaProxy.Interfaces;
+namespace Mocca.Interfaces;
 
 public interface IMoccaRepository
 {

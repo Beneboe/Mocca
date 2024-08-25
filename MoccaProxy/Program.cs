@@ -1,10 +1,6 @@
-using System;
 using Microsoft.AspNetCore.Builder;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Options;
-using MoccaProxy.Interfaces;
-using MoccaProxy.Services;
+using Microsoft.Extensions.Configuration;
+using Mocca;
 
 namespace MoccaProxy;
 
@@ -14,41 +10,35 @@ public class Program
     {
         var builder = WebApplication.CreateBuilder(args);
 
-        // Configure options
-        builder.Services.Configure<MoccaOptions>(
-            builder.Configuration.GetSection("Mocca"));
-        
-        // Add services to the container.
-        builder.Services.AddAuthorization();
+        //
+        // // Add services to the container.
+        // builder.Services.AddAuthorization();
 
         // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
-        builder.Services.AddEndpointsApiExplorer();
-        builder.Services.AddSwaggerGen();
+        // builder.Services.AddEndpointsApiExplorer();
+        // builder.Services.AddSwaggerGen();
 
-        builder.Services.AddHttpClient("ProxyClient", (sp, client) =>
+        builder.Services.AddMocca(options =>
         {
-            var options = sp.GetRequiredService<IOptions<MoccaOptions>>().Value;
-            client.BaseAddress = new Uri(options.ForwardTo);
+            builder.Configuration.GetSection("Mocca").Bind(options);
         });
-
-        builder.Services.AddScoped<IMoccaRepository, MoccaJsonRepository>();
 
         var app = builder.Build();
 
         // Configure the HTTP request pipeline.
-        if (app.Environment.IsDevelopment())
-        {
-            app.UseSwagger();
-            app.UseSwaggerUI();
-        }
+        // if (app.Environment.IsDevelopment())
+        // {
+        //     app.UseSwagger();
+        //     app.UseSwaggerUI();
+        // }
 
         // app.UseHttpsRedirection();
         //
         // app.UseAuthorization();
-
-        app.UseMoccaScribe();
-
-        app.UseMoccaProxy();
+        
+        app
+            .UseMoccaScribe()
+            .UseMoccaProxy();
 
         app.Run();
     }

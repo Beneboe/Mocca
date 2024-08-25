@@ -1,8 +1,6 @@
-using System;
-using System.Linq;
 using System.Text.Json.Serialization;
 
-namespace MoccaProxy.Data;
+namespace Mocca.Data;
 
 public sealed class MoccaRequest : IEquatable<MoccaRequest>
 {
