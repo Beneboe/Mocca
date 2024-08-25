@@ -4,6 +4,9 @@ using Mocca.Interfaces;
 
 namespace Mocca.Middleware;
 
+/// <summary>
+/// Matches requests with recorded responses.
+/// </summary>
 public class MoccaReplayMiddleware
 {
     public MoccaReplayMiddleware(RequestDelegate next)

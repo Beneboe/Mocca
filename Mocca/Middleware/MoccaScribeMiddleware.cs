@@ -5,6 +5,9 @@ using Mocca.Interfaces;
 
 namespace Mocca.Middleware;
 
+/// <summary>
+/// Records request and responses.
+/// </summary>
 public sealed class MoccaScribeMiddleware
 {
     private readonly RequestDelegate _next;

@@ -2,6 +2,9 @@ using Microsoft.AspNetCore.Http;
 
 namespace Mocca.Middleware;
 
+/// <summary>
+/// Forwards request to another web server.
+/// </summary>
 public sealed class MoccaProxyMiddleware
 {
     public MoccaProxyMiddleware(RequestDelegate next)
