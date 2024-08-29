@@ -48,6 +48,16 @@ public sealed class MoccaProxyMiddleware
             
             response.Headers.Append(key, value);
         }
+
+        if (responseMessage.Content.Headers.ContentType is not null)
+        {
+            response.ContentType = responseMessage.Content.Headers.ContentType.ToString();
+        }
+
+        if (responseMessage.Content.Headers.ContentLength is not null)
+        {
+            response.ContentLength = responseMessage.Content.Headers.ContentLength;
+        }
         
         await responseMessage.Content.CopyToAsync(response.Body);
     }
