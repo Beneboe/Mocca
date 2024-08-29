@@ -1,3 +1,4 @@
+using System.IO.Pipelines;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Options;
 using Mocca.Extensions;
@@ -21,6 +22,11 @@ public sealed class MoccaScribeMiddleware
     {
         var moccaOptions = options.Value;
         
+        // Redirects require the request stream needs to be resettable.
+        var requestStreamBuffer = new MemoryStream();
+        await httpContext.Request.Body.CopyToAsync(requestStreamBuffer);
+        httpContext.Request.Body = requestStreamBuffer;
+
         // Skip this middleware if the method is not supported such as DELETE.
         if (!moccaOptions.AllowedMethods.Contains(httpContext.Request.Method))
         {
@@ -33,14 +39,16 @@ public sealed class MoccaScribeMiddleware
             await _next(httpContext);
             return;
         }
-        
+
         var request = httpContext.Request.GetMoccaRequest();
         
-        var originalStream = httpContext.Response.Body;
-        var memoryStream = new MemoryStream();
-        
-        // Capture body in the memory stream.
-        httpContext.Response.Body = memoryStream;
+        // Later, GetMoccaResponse() requires a readable stream.
+        var responseStream = httpContext.Response.Body;
+        var responseStreamBuffer = new MemoryStream();
+        httpContext.Response.Body = responseStreamBuffer;
+
+        // Reset the request stream buffer.
+        requestStreamBuffer.Seek(0, SeekOrigin.Begin);
         await _next(httpContext);
 
         if (httpContext.RequestAborted.IsCancellationRequested)
@@ -53,8 +61,8 @@ public sealed class MoccaScribeMiddleware
 
         await repository.AddAsync(request, response);
 
-        memoryStream.Seek(0, SeekOrigin.Begin);
-        await memoryStream.CopyToAsync(originalStream);
+        responseStreamBuffer.Seek(0, SeekOrigin.Begin);
+        await responseStreamBuffer.CopyToAsync(responseStream);
     }
 
     private static bool Matches(ReadOnlySpan<char> path, ReadOnlySpan<char> pattern)

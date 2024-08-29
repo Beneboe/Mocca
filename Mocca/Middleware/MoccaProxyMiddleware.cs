@@ -38,9 +38,15 @@ public sealed class MoccaProxyMiddleware
     private static async Task HandleResponse(HttpResponseMessage responseMessage, HttpResponse response)
     {
         response.StatusCode = (int)responseMessage.StatusCode;
-        foreach (var (key, values) in response.Headers)
+        foreach (var (key, values) in responseMessage.Headers)
         {
-            response.Headers.Append(key, values);
+            var value = values.FirstOrDefault();
+            if (value is null)
+            {
+                continue;
+            }
+            
+            response.Headers.Append(key, value);
         }
         
         await responseMessage.Content.CopyToAsync(response.Body);

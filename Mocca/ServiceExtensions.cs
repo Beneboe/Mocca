@@ -14,15 +14,22 @@ public static class ServiceExtensions
 
     public static IServiceCollection AddMocca(this IServiceCollection services, Action<MoccaOptions> configureOptions)
     {
-        services.AddHttpClient("ProxyClient", (sp, client) =>
-        {
-            var options = sp.GetRequiredService<IOptions<MoccaOptions>>().Value;
-
-            if (!string.IsNullOrWhiteSpace(options.ForwardTo))
+        services
+            .AddHttpClient("ProxyClient")
+            .ConfigureHttpClient((sp, client) =>
             {
-                client.BaseAddress = new Uri(options.ForwardTo);
-            }
-        });
+                var options = sp.GetRequiredService<IOptions<MoccaOptions>>().Value;
+
+                if (!string.IsNullOrWhiteSpace(options.ForwardTo))
+                {
+                    client.BaseAddress = new Uri(options.ForwardTo);
+                }
+            })
+            .ConfigurePrimaryHttpMessageHandler(
+                () => new HttpClientHandler
+                {
+                    AllowAutoRedirect = false,
+                });
         
         services.AddScoped<IMoccaRepository, MoccaJsonRepository>();
         
