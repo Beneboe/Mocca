@@ -1,3 +1,4 @@
+using System.Net.Http.Headers;
 using Microsoft.AspNetCore.Http;
 
 namespace Mocca.Middleware;
@@ -27,9 +28,19 @@ public sealed class MoccaProxyMiddleware
             Content = new StreamContent(request.Body),
         };
         
+        if (request.ContentType is not null)
+        {
+            requestMessage.Content.Headers.ContentType = MediaTypeHeaderValue.Parse(request.ContentType);
+        }
+        
         foreach (var ( key, values) in request.Headers)
         {
-            request.Headers.Append(key, values);
+            if (key is "Content-Length" or "Content-Type")
+            {
+                continue;
+            }
+            
+            requestMessage.Headers.Add(key, (IEnumerable<string>)values);
         }
 
         return requestMessage;
@@ -58,7 +69,10 @@ public sealed class MoccaProxyMiddleware
         {
             response.ContentLength = responseMessage.Content.Headers.ContentLength;
         }
-        
-        await responseMessage.Content.CopyToAsync(response.Body);
+
+        if ((int)responseMessage.StatusCode is not (>= 300 and < 400))
+        {
+            await responseMessage.Content.CopyToAsync(response.Body);
+        }
     }
 }

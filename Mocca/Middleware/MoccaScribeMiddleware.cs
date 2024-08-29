@@ -1,6 +1,8 @@
 using System.IO.Pipelines;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc.Formatters;
 using Microsoft.Extensions.Options;
+using Microsoft.Net.Http.Headers;
 using Mocca.Extensions;
 using Mocca.Interfaces;
 
@@ -66,6 +68,11 @@ public sealed class MoccaScribeMiddleware
             return;
         }
 
+        if (IgnoredContentType(httpContext.Response.ContentType))
+        {
+            return;
+        }
+
         // Requires a readable stream.
         var response = httpContext.Response.GetMoccaResponse();
         await repository.AddAsync(request, response);
@@ -103,4 +110,7 @@ public sealed class MoccaScribeMiddleware
     }
 
     private static bool IgnoredStatusCode(int statusCode) => statusCode is not (>= 200 and < 300);
+
+    private static bool IgnoredContentType(string? contentType) =>
+        contentType is null || !MediaTypeHeaderValue.Parse(contentType).MatchesMediaType("application/json");
 }
