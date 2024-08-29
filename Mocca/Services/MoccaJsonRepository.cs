@@ -30,41 +30,46 @@ public sealed class MoccaJsonRepository : IMoccaRepository
     public async Task AddAsync(MoccaRequest request, MoccaResponse response)
     {
         await Semaphore.WaitAsync();
-        
-        if (File.Exists(_destination))
+
+        try
         {
-            await using var readStream = File.OpenRead(_destination);
-            using var reader = new StreamReader(readStream);
-
-            await SeekToResponse(reader, request);
-
-            if (!reader.EndOfStream)
+            if (File.Exists(_destination))
             {
-                // Request already exists.
-                return;
+                await using var readStream = File.OpenRead(_destination);
+                using var reader = new StreamReader(readStream);
+
+                await SeekToResponse(reader, request);
+
+                if (!reader.EndOfStream)
+                {
+                    // Request already exists.
+                    return;
+                }
             }
-        }
 
-        // var tempFileName = _destination.Replace(
-        //     oldValue: Path.GetFileName(_destination), 
-        //     newValue: Path.GetFileNameWithoutExtension(_destination) + ".temp" + Path.GetExtension(_destination));
-        //
-        // File.Copy(_destination, tempFileName);
-        // await using var writeStream = File.OpenWrite(tempFileName);
-        // using var writer = new StreamWriter(writeStream);
+            // var tempFileName = _destination.Replace(
+            //     oldValue: Path.GetFileName(_destination), 
+            //     newValue: Path.GetFileNameWithoutExtension(_destination) + ".temp" + Path.GetExtension(_destination));
+            //
+            // File.Copy(_destination, tempFileName);
+            // await using var writeStream = File.OpenWrite(tempFileName);
+            // using var writer = new StreamWriter(writeStream);
         
-        // Write at end of file.
-        await using var writeStream = File.Open(_destination, FileMode.Open, FileAccess.Write, FileShare.None);
-        writeStream.Seek(0, SeekOrigin.End);
-        await using var writer = new StreamWriter(writeStream);
+            // Write at end of file.
+            await using var writeStream = File.Open(_destination, FileMode.Open, FileAccess.Write, FileShare.None);
+            writeStream.Seek(0, SeekOrigin.End);
+            await using var writer = new StreamWriter(writeStream);
 
-        var line = JsonSerializer.Serialize(request);
-        await writer.WriteLineAsync(line);
+            var line = JsonSerializer.Serialize(request);
+            await writer.WriteLineAsync(line);
 
-        line = JsonSerializer.Serialize(response);
-        await writer.WriteLineAsync(line);
-
-        Semaphore.Release();
+            line = JsonSerializer.Serialize(response);
+            await writer.WriteLineAsync(line);
+        }
+        finally
+        {
+            Semaphore.Release();
+        }
     }
 
     public async Task<MoccaResponse?> ResolveAsync(MoccaRequest request)

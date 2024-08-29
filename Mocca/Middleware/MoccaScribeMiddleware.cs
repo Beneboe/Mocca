@@ -34,6 +34,7 @@ public sealed class MoccaScribeMiddleware
             return;
         }
 
+        // Skip this middleware if the path is ignored.
         if (moccaOptions.IgnoredPaths.Any(pattern => Matches(httpContext.Request.Path.ToString(), pattern)))
         {
             await _next(httpContext);
@@ -50,19 +51,26 @@ public sealed class MoccaScribeMiddleware
         // Reset the request stream buffer.
         requestStreamBuffer.Seek(0, SeekOrigin.Begin);
         await _next(httpContext);
-
+        
         if (httpContext.RequestAborted.IsCancellationRequested)
+        {
+            return;
+        }
+        
+        if (IgnoredStatusCode(httpContext.Response.StatusCode))
         {
             return;
         }
 
         // Requires a readable stream.
         var response = httpContext.Response.GetMoccaResponse();
-
         await repository.AddAsync(request, response);
-
+        
+                
         responseStreamBuffer.Seek(0, SeekOrigin.Begin);
         await responseStreamBuffer.CopyToAsync(responseStream);
+
+        await responseStream.FlushAsync();
     }
 
     private static bool Matches(ReadOnlySpan<char> path, ReadOnlySpan<char> pattern)
@@ -95,4 +103,6 @@ public sealed class MoccaScribeMiddleware
             return false;
         }
     }
+
+    private static bool IgnoredStatusCode(int statusCode) => statusCode is not (>= 200 and < 300);
 }
