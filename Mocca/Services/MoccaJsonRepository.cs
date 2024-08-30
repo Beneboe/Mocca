@@ -8,7 +8,7 @@ namespace Mocca.Services;
 public sealed class MoccaJsonRepository : IMoccaRepository
 {
     private static readonly SemaphoreSlim Semaphore = new SemaphoreSlim(0, 1);
-    private readonly string _destination;
+    private readonly MoccaOptions _options;
     private readonly JsonSerializerOptions _jsonOptions;
 
     static MoccaJsonRepository()
@@ -18,10 +18,10 @@ public sealed class MoccaJsonRepository : IMoccaRepository
 
     public MoccaJsonRepository(IOptions<MoccaOptions> options)
     {
-        _destination = options.Value.ResponseFile;
+        _options = options.Value;
         _jsonOptions = new JsonSerializerOptions(JsonSerializerDefaults.Web);
         
-        if (string.IsNullOrWhiteSpace(_destination))
+        if (string.IsNullOrWhiteSpace(_options.ResponseFile))
         {
             throw new InvalidDataException("Destination cannot be empty.");
         }
@@ -33,9 +33,9 @@ public sealed class MoccaJsonRepository : IMoccaRepository
 
         try
         {
-            if (File.Exists(_destination))
+            if (File.Exists(_options.ResponseFile))
             {
-                await using var readStream = File.OpenRead(_destination);
+                await using var readStream = File.OpenRead(_options.ResponseFile);
                 using var reader = new StreamReader(readStream);
 
                 await SeekToResponse(reader, request);
@@ -56,7 +56,7 @@ public sealed class MoccaJsonRepository : IMoccaRepository
             // using var writer = new StreamWriter(writeStream);
         
             // Write at end of file.
-            await using var writeStream = File.Open(_destination, FileMode.Open, FileAccess.Write, FileShare.None);
+            await using var writeStream = File.Open(_options.ResponseFile, FileMode.Open, FileAccess.Write, FileShare.None);
             writeStream.Seek(0, SeekOrigin.End);
             await using var writer = new StreamWriter(writeStream);
 
@@ -74,7 +74,7 @@ public sealed class MoccaJsonRepository : IMoccaRepository
 
     public async Task<MoccaResponse?> ResolveAsync(MoccaRequest request)
     {
-        await using var stream = File.OpenRead(_destination);
+        await using var stream = File.OpenRead(_options.ResponseFile);
         using var reader = new StreamReader(stream);
 
         await SeekToResponse(reader, request);
@@ -111,12 +111,20 @@ public sealed class MoccaJsonRepository : IMoccaRepository
                 throw new InvalidDataException("Missing response.");
             }
             
-            if (fileRequest.Equals(request))
+            if (Matches(fileRequest, request))
             {
                 return;
             }
 
             _ = await reader.ReadLineAsync();
         }
+    }
+
+    private bool Matches(MoccaRequest x, MoccaRequest y)
+    {
+        return x.Method == y.Method
+            && x.Path == y.Path
+            && (_options.IgnoreRequestHeadersEquality || x.HeaderHash.SequenceEqual(y.HeaderHash))
+            && x.ContentHash.SequenceEqual(y.ContentHash);
     }
 }

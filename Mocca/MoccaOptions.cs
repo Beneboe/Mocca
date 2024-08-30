@@ -8,6 +8,8 @@ public sealed class MoccaOptions
 
     public string[] IgnoredPaths { get; set; } = Array.Empty<string>();
 
+    public bool IgnoreRequestHeadersEquality { get; set; }
+
     public string ResponseFile { get; set; } = string.Empty;
 
     public JsonPropertyValueReplacement[] Overwrite { get; set; } =
