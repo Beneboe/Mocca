@@ -13,4 +13,7 @@ public static class MiddlewareExtensions
 
     public static IApplicationBuilder UseMoccaReplay(this IApplicationBuilder builder) =>
         builder.UseMiddleware<MoccaReplayMiddleware>();
+
+    public static IApplicationBuilder UseMoccaOverwrite(this IApplicationBuilder builder) =>
+        builder.UseMiddleware<MoccaOverwriteMiddleware>();
 }

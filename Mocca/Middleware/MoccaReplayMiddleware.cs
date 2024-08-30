@@ -7,7 +7,7 @@ namespace Mocca.Middleware;
 /// <summary>
 /// Matches requests with recorded responses.
 /// </summary>
-public class MoccaReplayMiddleware
+public sealed class MoccaReplayMiddleware
 {
     public MoccaReplayMiddleware(RequestDelegate next)
     {

@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc.Formatters;
 using Microsoft.Extensions.Options;
 using Microsoft.Net.Http.Headers;
 using Mocca.Extensions;
+using Mocca.Helpers;
 using Mocca.Interfaces;
 
 namespace Mocca.Middleware;
@@ -11,15 +12,8 @@ namespace Mocca.Middleware;
 /// <summary>
 /// Records request and responses.
 /// </summary>
-public sealed class MoccaScribeMiddleware
+public sealed class MoccaScribeMiddleware(RequestDelegate next)
 {
-    private readonly RequestDelegate _next;
-
-    public MoccaScribeMiddleware(RequestDelegate next)
-    {
-        _next = next;
-    }
-
     public async Task InvokeAsync(HttpContext httpContext, IOptions<MoccaOptions> options, IMoccaRepository repository)
     {
         var moccaOptions = options.Value;
@@ -32,14 +26,14 @@ public sealed class MoccaScribeMiddleware
         // Skip this middleware if the method is not supported such as DELETE.
         if (!moccaOptions.AllowedMethods.Contains(httpContext.Request.Method))
         {
-            await _next(httpContext);
+            await next(httpContext);
             return;
         }
 
         // Skip this middleware if the path is ignored.
-        if (moccaOptions.IgnoredPaths.Any(pattern => Matches(httpContext.Request.Path.ToString(), pattern)))
+        if (moccaOptions.IgnoredPaths.Any(pattern => UrlPathHelper.Matches(httpContext.Request.Path.ToString(), pattern)))
         {
-            await _next(httpContext);
+            await next(httpContext);
             return;
         }
 
@@ -52,7 +46,7 @@ public sealed class MoccaScribeMiddleware
 
         // Reset the request stream buffer.
         requestStreamBuffer.Seek(0, SeekOrigin.Begin);
-        await _next(httpContext);
+        await next(httpContext);
         
         if (httpContext.RequestAborted.IsCancellationRequested)
         {
@@ -76,37 +70,6 @@ public sealed class MoccaScribeMiddleware
         // Requires a readable stream.
         var response = httpContext.Response.GetMoccaResponse();
         await repository.AddAsync(request, response);
-    }
-
-    private static bool Matches(ReadOnlySpan<char> path, ReadOnlySpan<char> pattern)
-    {
-        if (path.Length == 0 && pattern.Length == 0)
-        {
-            return true;
-        }
-        else if (path.Length == 0 && pattern.Length > 0)
-        {
-            return pattern[0] == '*' 
-                   && (pattern.Length == 1  || (pattern.Length == 2  && pattern[1] == '*'));
-        }
-        else if (pattern.Length > 0 && pattern[0] == '*')
-        {
-            var pathTail = path.Slice(1);
-            var patternTail = pattern.Slice(1);
-            
-            return Matches(path, patternTail) || Matches(pathTail, pattern);
-        }
-        else if (pattern.Length > 0)
-        {
-            var pathTail = path.Slice(1);
-            var patternTail = pattern.Slice(1);
-
-            return path[0] == pattern[0] && Matches(pathTail, patternTail);
-        }
-        else
-        {
-            return false;
-        }
     }
 
     private static bool IgnoredStatusCode(int statusCode) => statusCode is not (>= 200 and < 300);
