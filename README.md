@@ -4,7 +4,7 @@ A C# web server for mocking web APIs. One web server records API request and sto
 
 ## Configuration 
 
-```json
+```jsonc
 {
     // The Mocca configuration section
     "Mocca": {
