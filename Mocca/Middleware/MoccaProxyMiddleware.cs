@@ -56,19 +56,36 @@ public sealed class MoccaProxyMiddleware
             {
                 continue;
             }
-            
+
             response.Headers.Append(key, value);
         }
 
-        if (responseMessage.Content.Headers.ContentType is not null)
+        foreach (var (key, values) in responseMessage.Content.Headers)
         {
-            response.ContentType = responseMessage.Content.Headers.ContentType.ToString();
+            var value = values.FirstOrDefault();
+            if (value is null)
+            {
+                continue;
+            }
+
+            // Skip because data decompressed between middleware.
+            if (key is "Content-Encoding")
+            {
+                continue;
+            }
+
+            response.Headers.Append(key, value);
         }
 
-        if (responseMessage.Content.Headers.ContentLength is not null)
-        {
-            response.ContentLength = responseMessage.Content.Headers.ContentLength;
-        }
+        //if (responseMessage.Content.Headers.ContentType is not null)
+        //{
+        //    response.ContentType = responseMessage.Content.Headers.ContentType.ToString();
+        //}
+
+        //if (responseMessage.Content.Headers.ContentLength is not null)
+        //{
+        //    response.ContentLength = responseMessage.Content.Headers.ContentLength;
+        //}
 
         if ((int)responseMessage.StatusCode is not (>= 300 and < 400))
         {

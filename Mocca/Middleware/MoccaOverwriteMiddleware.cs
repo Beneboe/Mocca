@@ -1,20 +1,25 @@
-using System.Globalization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Options;
-using System.Linq;
-using System.Text.Json;
-using System.Text.Json.Nodes;
 using Microsoft.Net.Http.Headers;
 using Mocca.Helpers;
+using System.Globalization;
+using System.Text.Json;
+using System.Text.Json.Nodes;
 
 namespace Mocca.Middleware;
 
 /// <summary>
 /// Overwrites json properties in the response.
 /// </summary>
-public sealed class MoccaOverwriteMiddleware(RequestDelegate next, IOptions<MoccaOptions> moccaOptions)
+public sealed class MoccaOverwriteMiddleware(RequestDelegate next)
 {
-    public async Task InvokeAsync(HttpContext context)
+    private readonly JsonSerializerOptions options = new JsonSerializerOptions
+    {
+        AllowTrailingCommas = true,
+        ReadCommentHandling = JsonCommentHandling.Skip,
+    };
+
+    public async Task InvokeAsync(HttpContext context, IOptions<MoccaOptions> moccaOptions)
     {
         var options = moccaOptions.Value;
 
@@ -51,7 +56,7 @@ public sealed class MoccaOverwriteMiddleware(RequestDelegate next, IOptions<Mocc
         }
 
         responseStreamBuffer.Seek(0, SeekOrigin.Begin);
-        var documentNode = JsonSerializer.Deserialize<JsonNode>(responseStreamBuffer);
+        var documentNode = JsonSerializer.Deserialize<JsonNode>(responseStreamBuffer, this.options);
 
         if (documentNode is null)
         {

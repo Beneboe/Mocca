@@ -29,6 +29,7 @@ public static class ServiceExtensions
                 () => new HttpClientHandler
                 {
                     AllowAutoRedirect = false,
+                    AutomaticDecompression = System.Net.DecompressionMethods.All,
                 });
         
         services.AddScoped<IMoccaRepository, MoccaJsonRepository>();
